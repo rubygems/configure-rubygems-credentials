@@ -143,13 +143,13 @@ function run() {
                     throw new Error('Cannot specify audience when using api-token');
                 if (roleRoleToAssume)
                     throw new Error('Cannot specify role-to-assume when using api-token');
-                (0, configureApiToken_1.configureApiToken)(apiToken, gemServer);
+                yield (0, configureApiToken_1.configureApiToken)(apiToken, gemServer);
             }
             else if (roleRoleToAssume) {
                 if (!audience)
                     throw new Error('Missing audience input');
                 const oidcIdToken = yield (0, assumeRole_1.assumeRole)(roleRoleToAssume, audience, gemServer);
-                (0, configureApiToken_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
+                yield (0, configureApiToken_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
             }
             else {
                 throw new Error('Missing api-token or role-to-assume input');
@@ -219,7 +219,7 @@ function assumeRole(roleToAssume, audience, server) {
             accept: 'application/json'
         });
         if (!res.result)
-            throw new Error(`No valid role ${roleToAssume} found on ${server} for audience ${audience}: ${JSON.stringify(res)} from ${url}`);
+            throw new Error(`No valid role ${roleToAssume} found on ${server} for audience ${audience}`);
         const idToken = res.result;
         if (typeof idToken.rubygems_api_key !== 'string')
             throw new Error('rubygems_api_key is not a string');

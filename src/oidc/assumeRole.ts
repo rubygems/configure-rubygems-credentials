@@ -36,9 +36,7 @@ export async function assumeRole(
 
   if (!res.result)
     throw new Error(
-      `No valid role ${roleToAssume} found on ${server} for audience ${audience}: ${JSON.stringify(
-        res
-      )} from ${url}`
+      `No valid role ${roleToAssume} found on ${server} for audience ${audience}`
     )
 
   const idToken = res.result

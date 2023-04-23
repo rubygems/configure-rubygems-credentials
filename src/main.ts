@@ -4,8 +4,8 @@ import {assumeRole} from './oidc/assumeRole'
 
 async function run(): Promise<void> {
   try {
-    const gemServer: string = core.getInput('gem-server')
-    const audience: string = core.getInput('audience')
+    const gemServer = core.getInput('gem-server')
+    const audience = core.getInput('audience')
     const roleRoleToAssume = core.getInput('role-to-assume')
     const apiToken = core.getInput('api-token')
 
@@ -17,7 +17,7 @@ async function run(): Promise<void> {
       if (roleRoleToAssume)
         throw new Error('Cannot specify role-to-assume when using api-token')
 
-      configureApiToken(apiToken, gemServer)
+      await configureApiToken(apiToken, gemServer)
     } else if (roleRoleToAssume) {
       if (!audience) throw new Error('Missing audience input')
 
@@ -26,7 +26,7 @@ async function run(): Promise<void> {
         audience,
         gemServer
       )
-      configureApiToken(oidcIdToken.rubygemsApiKey, gemServer)
+      await configureApiToken(oidcIdToken.rubygemsApiKey, gemServer)
     } else {
       throw new Error('Missing api-token or role-to-assume input')
     }
