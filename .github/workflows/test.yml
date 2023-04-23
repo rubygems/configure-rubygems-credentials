@@ -21,4 +21,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./
         with:
-          milliseconds: 1000
+          role-to-assume: 3
+          gem-server: 'https://oidc-api-token.rubygems.org'
+      - name: Test token
+        run: |
+          curl -v --fail 'https://oidc-api-token.rubygems.org/api/v1/oidc/api_key/roles/3' -H 'Authorization: ${{ env.RUBYGEMS_API_TOKEN }}'

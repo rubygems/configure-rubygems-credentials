@@ -1,11 +1,27 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Configure RubyGems Credentials'
+description: 'Configure rubygems.org credential environment variables for use in other GitHub Actions.'
+branding:
+  icon: 'package'
+  color: 'red'
+author: 'RubyGems'
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  gem-server:
+    required: false
+    description: 'The gem server to configure credentials for. Defaults to https://rubygems.org.'
+    default: 'https://rubygems.org'
+  audience:
+    default: 'rubygems.org'
+    description: 'The audience to use for the OIDC provider. Defaults to rubygems.org.'
+    required: false
+  role-to-assume:
+    description: >-
+      Use the provided credentials to assume an OIDC api token role and configure the Actions
+      environment with the assumed role credentials rather than with the provided
+      credentials
+    required: false
+  api-token:
+    description: 'The rubygems api token to use for authentication.'
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'

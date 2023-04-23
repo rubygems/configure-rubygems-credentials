@@ -1,16 +1,35 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import {configureApiToken} from './configureApiToken'
+import {assumeRole} from './oidc/assumeRole'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+    const gemServer: string = core.getInput('gem-server')
+    const audience: string = core.getInput('audience')
+    const roleRoleToAssume = core.getInput('role-to-assume')
+    const apiToken = core.getInput('api-token')
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    if (!gemServer) throw new Error('Missing gem-server input')
 
-    core.setOutput('time', new Date().toTimeString())
+    if (apiToken) {
+      if (audience)
+        throw new Error('Cannot specify audience when using api-token')
+      if (roleRoleToAssume)
+        throw new Error('Cannot specify role-to-assume when using api-token')
+
+      configureApiToken(apiToken, gemServer)
+    } else if (roleRoleToAssume) {
+      if (!audience) throw new Error('Missing audience input')
+
+      const oidcIdToken = await assumeRole(
+        roleRoleToAssume,
+        audience,
+        gemServer
+      )
+      configureApiToken(oidcIdToken.rubygemsApiKey, gemServer)
+    } else {
+      throw new Error('Missing api-token or role-to-assume input')
+    }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
