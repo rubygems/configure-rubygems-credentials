@@ -45,11 +45,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.configureApiToken = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const io = __importStar(__nccwpck_require__(7436));
-const os_1 = __nccwpck_require__(2037);
-const yaml_1 = __importDefault(__nccwpck_require__(4083));
 const promises_1 = __nccwpck_require__(3292);
+const os_1 = __nccwpck_require__(2037);
 const path_1 = __nccwpck_require__(1017);
-const promises_2 = __nccwpck_require__(3292);
+const yaml_1 = __importDefault(__nccwpck_require__(4083));
 function configureApiToken(apiToken, server) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!apiToken)
@@ -78,7 +77,7 @@ function addCredentialToFile(path, key, value) {
             .then(contents => yaml_1.default.parseDocument(contents))
             .catch(() => new yaml_1.default.Document(new yaml_1.default.YAMLMap(new yaml_1.default.Schema({ toStringDefaults: { collectionStyle: 'block' } }))));
         credentials.add({ key, value: new yaml_1.default.Scalar(value) });
-        yield (0, promises_2.writeFile)(path, credentials.toString(), {
+        yield (0, promises_1.writeFile)(path, credentials.toString(), {
             encoding: 'utf8',
             mode: 0o600,
             flag: 'w'
@@ -149,8 +148,8 @@ function run() {
             else if (roleRoleToAssume) {
                 if (!audience)
                     throw new Error('Missing audience input');
-                const oidIdToken = yield (0, assumeRole_1.assumeRole)(roleRoleToAssume, audience, gemServer);
-                (0, configureApiToken_1.configureApiToken)(oidIdToken.rubygemsApiKey, gemServer);
+                const oidcIdToken = yield (0, assumeRole_1.assumeRole)(roleRoleToAssume, audience, gemServer);
+                (0, configureApiToken_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
             }
             else {
                 throw new Error('Missing api-token or role-to-assume input');
@@ -207,36 +206,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.assumeRole = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const types_1 = __nccwpck_require__(9830);
-class HTTPResponseError extends Error {
-    constructor(response) {
-        super(`HTTP Error Response: ${response.status} ${response.statusText}`);
-        this.response = response;
-    }
-}
-function checkStatus(response) {
-    if (response.ok) {
-        // response.status >= 200 && response.status < 300
-        return response;
-    }
-    else {
-        throw new HTTPResponseError(response);
-    }
-}
+const http_client_1 = __nccwpck_require__(6255);
 function assumeRole(roleToAssume, audience, server) {
     return __awaiter(this, void 0, void 0, function* () {
         const webIdentityToken = yield core.getIDToken(audience);
-        const res = yield fetch(`${server}/api/v1/oidc/api_key_roles/${roleToAssume}/assume_role`, {
-            method: 'post',
-            body: JSON.stringify({ jwt: webIdentityToken }),
-            headers: {
-                'content-type': 'application/json',
-                accept: 'application/json'
-            }
+        if (!webIdentityToken)
+            throw new Error(`Unable to get ID Token for audience ${audience}`);
+        const http = new http_client_1.HttpClient('rubygems-oidc-action');
+        const url = `${server}/api/v1/oidc/api_key_roles/${roleToAssume}/assume_role`;
+        const res = yield http.postJson(url, { jwt: webIdentityToken }, {
+            'content-type': 'application/json',
+            accept: 'application/json'
         });
-        const idToken = yield checkStatus(res).json();
-        if (!(0, types_1.isStringObject)(idToken.rubygems_api_key))
-            throw new Error('rubygemsApiKey is not a string');
+        if (!res.result)
+            throw new Error(`No valid role ${roleToAssume} found on ${server} for audience ${audience}: ${JSON.stringify(res)} from ${url}`);
+        const idToken = res.result;
+        if (typeof idToken.rubygems_api_key !== 'string')
+            throw new Error('rubygems_api_key is not a string');
         return {
             rubygemsApiKey: idToken.rubygems_api_key,
             gem: idToken.gem,
@@ -3542,14 +3528,6 @@ module.exports = require("tls");
 
 "use strict";
 module.exports = require("util");
-
-/***/ }),
-
-/***/ 9830:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("util/types");
 
 /***/ }),
 

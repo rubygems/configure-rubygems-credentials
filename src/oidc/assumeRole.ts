@@ -1,5 +1,4 @@
 import * as core from '@actions/core'
-import {isStringObject} from 'util/types'
 import {HttpClient} from '@actions/http-client'
 
 type IdToken = {
@@ -20,7 +19,13 @@ export async function assumeRole(
     throw new Error(`Unable to get ID Token for audience ${audience}`)
   const http = new HttpClient('rubygems-oidc-action')
   const url = `${server}/api/v1/oidc/api_key_roles/${roleToAssume}/assume_role`
-  const res = await http.postJson<any>(
+  const res = await http.postJson<{
+    rubygems_api_key: string
+    gem: string | undefined
+    name: string
+    scopes: [string]
+    expires_at: string
+  }>(
     url,
     {jwt: webIdentityToken},
     {
