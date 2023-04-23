@@ -28,4 +28,4 @@ jobs:
           gem-server: 'https://oidc-api-token.rubygems.org'
       - name: Test token
         run: |
-          curl -v --fail 'https://oidc-api-token.rubygems.org/api/v1/oidc/api_key/roles/3' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}'
+          curl -v --fail 'https://oidc-api-token.rubygems.org/api/v1/oidc/api_key_roles/3' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}'
