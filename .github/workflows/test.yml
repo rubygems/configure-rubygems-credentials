@@ -20,12 +20,16 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    strategy:
+      matrix:
+        roleToken:
+          - rg_oidc_akr_f55fe1127adjkkcn8ty6 # Actions Test, all repos, 15min, push rubygem
     steps:
       - uses: actions/checkout@v3
       - uses: ./
         with:
-          role-to-assume: rg_oidc_akr_f55fe1127adjkkcn8ty6
+          role-to-assume: '${{ matrix.roleToken }}'
           gem-server: 'https://oidc-api-token.rubygems.org'
       - name: Test token
         run: |
-          curl -v --fail 'https://oidc-api-token.rubygems.org/api/v1/oidc/api_key_roles/3' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}'
+          curl -v --fail 'https://oidc-api-token.rubygems.org/api/v1/oidc/api_key_roles/${{ matrix.roleToken }}' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}'
