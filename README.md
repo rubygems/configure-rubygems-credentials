@@ -37,7 +37,7 @@ To do that, you would add the following step to your workflow:
 - name: Configure RubyGems Credentials
   uses: rubygems/configure-rubygems-credentials@main
   with:
-    role-to-assume: 3
+    role-to-assume: rg_oidc_akr_f55fe1127adjkkcn8ty6
 ```
 
 You can use this action with the `rubygems` or `bundler` command line tools,

@@ -6,7 +6,7 @@ async function run(): Promise<void> {
   try {
     const gemServer = core.getInput('gem-server')
     const audience = core.getInput('audience')
-    const roleRoleToAssume = core.getInput('role-to-assume')
+    const roleToAssume = core.getInput('role-to-assume')
     const apiToken = core.getInput('api-token')
 
     if (!gemServer) throw new Error('Missing gem-server input')
@@ -14,18 +14,14 @@ async function run(): Promise<void> {
     if (apiToken) {
       if (audience)
         throw new Error('Cannot specify audience when using api-token')
-      if (roleRoleToAssume)
+      if (roleToAssume)
         throw new Error('Cannot specify role-to-assume when using api-token')
 
       await configureApiToken(apiToken, gemServer)
-    } else if (roleRoleToAssume) {
+    } else if (roleToAssume) {
       if (!audience) throw new Error('Missing audience input')
 
-      const oidcIdToken = await assumeRole(
-        roleRoleToAssume,
-        audience,
-        gemServer
-      )
+      const oidcIdToken = await assumeRole(roleToAssume, audience, gemServer)
       await configureApiToken(oidcIdToken.rubygemsApiKey, gemServer)
     } else {
       throw new Error('Missing api-token or role-to-assume input')
