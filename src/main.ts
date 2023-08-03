@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {configureApiToken} from './configureApiToken'
+import {configureApiToken} from './configure-api-token'
 import {assumeRole} from './oidc/assumeRole'
 
 async function run(): Promise<void> {
