@@ -13,7 +13,7 @@ import * as os from 'os'
 import YAML from 'yaml'
 import * as core from '@actions/core'
 
-import {configureApiToken} from '../src/configureApiToken'
+import {configureApiToken} from '../src/configure-api-token'
 import {assumeRole} from '../src/oidc/assumeRole'
 
 jest.mock('os', () => {

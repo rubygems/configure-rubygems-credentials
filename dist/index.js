@@ -1,7 +1,7 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 8690:
+/***/ 6725:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -61,7 +61,7 @@ function configureApiToken(apiToken, server) {
         yield io.mkdirP(gemDir);
         const credentialsFile = (0, path_1.join)(gemDir, 'credentials');
         let key;
-        if (server == 'https://rubygems.org') {
+        if (server === 'https://rubygems.org') {
             key = ':rubygems_api_key';
         }
         else {
@@ -73,15 +73,24 @@ function configureApiToken(apiToken, server) {
 exports.configureApiToken = configureApiToken;
 function addCredentialToFile(path, key, value) {
     return __awaiter(this, void 0, void 0, function* () {
-        const credentials = yield (0, promises_1.readFile)(path, 'utf8')
-            .then(contents => yaml_1.default.parseDocument(contents))
-            .catch(() => new yaml_1.default.Document(new yaml_1.default.YAMLMap(new yaml_1.default.Schema({ toStringDefaults: { collectionStyle: 'block' } }))));
+        const credentials = yield readCredentials(path);
         credentials.add({ key, value: new yaml_1.default.Scalar(value) });
         yield (0, promises_1.writeFile)(path, credentials.toString(), {
             encoding: 'utf8',
             mode: 0o600,
             flag: 'w'
         });
+    });
+}
+function readCredentials(path) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const contents = yield (0, promises_1.readFile)(path, 'utf8');
+            return yaml_1.default.parseDocument(contents);
+        }
+        catch (error) {
+            return new yaml_1.default.Document(new yaml_1.default.YAMLMap(new yaml_1.default.Schema({ toStringDefaults: { collectionStyle: 'block' } })));
+        }
     });
 }
 
@@ -127,7 +136,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const configureApiToken_1 = __nccwpck_require__(8690);
+const configure_api_token_1 = __nccwpck_require__(6725);
 const assumeRole_1 = __nccwpck_require__(3317);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -143,13 +152,13 @@ function run() {
                     throw new Error('Cannot specify audience when using api-token');
                 if (roleToAssume)
                     throw new Error('Cannot specify role-to-assume when using api-token');
-                yield (0, configureApiToken_1.configureApiToken)(apiToken, gemServer);
+                yield (0, configure_api_token_1.configureApiToken)(apiToken, gemServer);
             }
             else if (roleToAssume) {
                 if (!audience)
                     throw new Error('Missing audience input');
                 const oidcIdToken = yield (0, assumeRole_1.assumeRole)(roleToAssume, audience, gemServer);
-                yield (0, configureApiToken_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
+                yield (0, configure_api_token_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
             }
             else {
                 throw new Error('Missing api-token or role-to-assume input');
