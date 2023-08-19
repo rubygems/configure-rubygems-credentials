@@ -21,15 +21,32 @@ jobs:
       id-token: write
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         roleToken:
-          - rg_oidc_akr_f55fe1127adjkkcn8ty6 # Actions Test, all repos, 15min, push rubygem
+          - ''
+        gem-server:
+          - 'https://rubygems.org'
+        include:
+          - roleToken: rg_oidc_akr_f55fe1127adjkkcn8ty6 # Actions Test, all repos, 15min, push rubygem
+            gem-server: 'https://oidc-api-token.rubygems.org'
+          - roleToken: rg_oidc_akr_y6txf9nm3c4kttxgnsgg
+            gem-server: 'https://staging.rubygems.org'
+        exclude:
+          - roleToken: ''
+
     steps:
       - uses: actions/checkout@v3
       - uses: ./
         with:
           role-to-assume: '${{ matrix.roleToken }}'
-          gem-server: 'https://oidc-api-token.rubygems.org'
+          gem-server: '${{ matrix.gem-server }}'
       - name: Test token
         run: |
-          curl -v --fail 'https://oidc-api-token.rubygems.org/api/v1/oidc/api_key_roles/${{ matrix.roleToken }}' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}'
+          curl -v --fail '${{ matrix.gem-server }}/api/v1/oidc/api_key_roles/${{ matrix.roleToken }}' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}'
+  test-all:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          true
