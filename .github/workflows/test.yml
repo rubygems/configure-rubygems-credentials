@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         roleToken:
-          - ''
+          - rg_oidc_akr_m17rp5g5mz25rvkctys6
         gem-server:
           - 'https://rubygems.org'
         include:
@@ -32,8 +32,6 @@ jobs:
             gem-server: 'https://oidc-api-token.rubygems.org'
           - roleToken: rg_oidc_akr_y6txf9nm3c4kttxgnsgg
             gem-server: 'https://staging.rubygems.org'
-        exclude:
-          - roleToken: ''
 
     steps:
       - uses: actions/checkout@v3
