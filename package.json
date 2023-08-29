@@ -43,7 +43,7 @@
     "js-yaml": "^4.1.0",
     "mock-fs": "^5.2.0",
     "nock": "^13.3.3",
-    "prettier": "^3.0.2",
+    "prettier": "^3.0.3",
     "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
   }
