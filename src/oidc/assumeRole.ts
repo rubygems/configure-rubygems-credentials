@@ -1,13 +1,24 @@
 import * as core from '@actions/core'
 import {HttpClient} from '@actions/http-client'
+import {z} from 'zod'
 
-type IdToken = {
-  rubygemsApiKey: string
-  name: string
-  scopes: [string]
-  gem: string | undefined
-  expiresAt: string
-}
+const IdTokenSchema = z
+  .object({
+    rubygems_api_key: z.string(),
+    name: z.string(),
+    scopes: z.array(z.string()),
+    gem: z.string().optional(),
+    expires_at: z.string().datetime({offset: true})
+  })
+  .transform(({rubygems_api_key, expires_at, ...rest}) => {
+    return {
+      rubygemsApiKey: rubygems_api_key,
+      expiresAt: expires_at,
+      ...rest
+    }
+  })
+
+type IdToken = z.infer<typeof IdTokenSchema>
 
 export async function assumeRole(
   roleToAssume: string,
@@ -19,13 +30,7 @@ export async function assumeRole(
     throw new Error(`Unable to get ID Token for audience ${audience}`)
   const http = new HttpClient('rubygems-oidc-action')
   const url = `${server}/api/v1/oidc/api_key_roles/${roleToAssume}/assume_role`
-  const res = await http.postJson<{
-    rubygems_api_key: string
-    gem: string | undefined
-    name: string
-    scopes: [string]
-    expires_at: string
-  }>(
+  const res = await http.postJson<IdToken>(
     url,
     {jwt: webIdentityToken},
     {
@@ -39,16 +44,5 @@ export async function assumeRole(
       `No valid role ${roleToAssume} found on ${server} for audience ${audience}`
     )
 
-  const idToken = res.result
-
-  if (typeof idToken.rubygems_api_key !== 'string')
-    throw new Error('rubygems_api_key is not a string')
-
-  return {
-    rubygemsApiKey: idToken.rubygems_api_key,
-    gem: idToken.gem,
-    name: idToken.name,
-    scopes: idToken.scopes,
-    expiresAt: idToken.expires_at
-  }
+  return IdTokenSchema.parse(res.result)
 }
