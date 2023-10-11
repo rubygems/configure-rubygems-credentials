@@ -228,12 +228,15 @@ exports.assumeRole = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const http_client_1 = __nccwpck_require__(6255);
 const zod_1 = __nccwpck_require__(3301);
+const RubygemSchema = zod_1.z.object({
+    name: zod_1.z.string()
+});
 const IdTokenSchema = zod_1.z
     .object({
     rubygems_api_key: zod_1.z.string(),
     name: zod_1.z.string(),
     scopes: zod_1.z.array(zod_1.z.string()),
-    gem: zod_1.z.string().optional(),
+    gem: RubygemSchema.optional(),
     expires_at: zod_1.z.string().datetime({ offset: true })
 })
     .transform((_a) => {

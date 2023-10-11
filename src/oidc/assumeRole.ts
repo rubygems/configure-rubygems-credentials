@@ -2,12 +2,16 @@ import * as core from '@actions/core'
 import {HttpClient} from '@actions/http-client'
 import {z} from 'zod'
 
+const RubygemSchema = z.object({
+  name: z.string()
+})
+
 const IdTokenSchema = z
   .object({
     rubygems_api_key: z.string(),
     name: z.string(),
     scopes: z.array(z.string()),
-    gem: z.string().optional(),
+    gem: RubygemSchema.optional(),
     expires_at: z.string().datetime({offset: true})
   })
   .transform(({rubygems_api_key, expires_at, ...rest}) => {

@@ -97,6 +97,32 @@ describe('assumeRole', () => {
       scopes: ['push_rubygem']
     })
   })
+
+  test('works when scoped to a gem', async () => {
+    jest.spyOn(core, 'getIDToken').mockReturnValue(Promise.resolve('ID_TOKEN'))
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/api_key_roles/1/assume_role', {
+        jwt: 'ID_TOKEN'
+      })
+      .reply(201, {
+        name: 'role name',
+        rubygems_api_key: 'API_KEY',
+        expires_at: '2021-01-01T00:00:00Z',
+        gem: {name: 'rubygem0', version: '1.0.0'},
+        scopes: ['push_rubygem']
+      })
+
+    await expect(
+      assumeRole('1', 'rubygems.org', 'https://rubygems.org')
+    ).resolves.toEqual({
+      expiresAt: '2021-01-01T00:00:00Z',
+      gem: {name: 'rubygem0'},
+      name: 'role name',
+      rubygemsApiKey: 'API_KEY',
+      scopes: ['push_rubygem']
+    })
+  })
 })
 
 function mockHomedir(homedir: string) {
