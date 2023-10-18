@@ -32,7 +32,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/mock-fs": "^4.13.2",
+    "@types/mock-fs": "^4.13.3",
     "@types/node": "^20.8.7",
     "@typescript-eslint/parser": "^5.62.0",
     "@vercel/ncc": "^0.38.0",
