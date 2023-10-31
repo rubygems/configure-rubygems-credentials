@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@types/mock-fs": "^4.13.3",
-    "@types/node": "^20.8.8",
+    "@types/node": "^20.8.10",
     "@typescript-eslint/parser": "^5.62.0",
     "@vercel/ncc": "^0.38.1",
     "eslint": "^8.52.0",
