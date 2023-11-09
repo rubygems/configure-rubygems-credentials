@@ -138,6 +138,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const configure_api_token_1 = __nccwpck_require__(6725);
 const assumeRole_1 = __nccwpck_require__(3317);
+const trustedPublisher_1 = __nccwpck_require__(7673);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -145,6 +146,19 @@ function run() {
             const audience = core.getInput('audience');
             const roleToAssume = core.getInput('role-to-assume');
             const apiToken = core.getInput('api-token');
+            const trustedPublisher = (() => {
+                const trustedPublisherConfigured = !!core.getInput('trusted-publisher');
+                if (!trustedPublisherConfigured && !apiToken && !roleToAssume) {
+                    // default to trusted publishing if no api-token or role-to-assume is specified and trusted-publisher is not configured
+                    return true;
+                }
+                else if (trustedPublisherConfigured) {
+                    return core.getBooleanInput('trusted-publisher');
+                }
+                else {
+                    return false;
+                }
+            })();
             if (!gemServer)
                 throw new Error('Missing gem-server input');
             if (apiToken) {
@@ -152,12 +166,22 @@ function run() {
                     throw new Error('Cannot specify audience when using api-token');
                 if (roleToAssume)
                     throw new Error('Cannot specify role-to-assume when using api-token');
+                if (trustedPublisher)
+                    throw new Error('Cannot specify trusted-publisher when using api-token');
                 yield (0, configure_api_token_1.configureApiToken)(apiToken, gemServer);
             }
             else if (roleToAssume) {
                 if (!audience)
                     throw new Error('Missing audience input');
+                if (trustedPublisher)
+                    throw new Error('Cannot specify trusted-publisher when using role-to-assume');
                 const oidcIdToken = yield (0, assumeRole_1.assumeRole)(roleToAssume, audience, gemServer);
+                yield (0, configure_api_token_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
+            }
+            else if (trustedPublisher) {
+                if (!audience)
+                    throw new Error('Missing audience input');
+                const oidcIdToken = yield (0, trustedPublisher_1.exchangeToken)(audience, gemServer);
                 yield (0, configure_api_token_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
             }
             else {
@@ -212,37 +236,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.assumeRole = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const http_client_1 = __nccwpck_require__(6255);
-const zod_1 = __nccwpck_require__(3301);
-const RubygemSchema = zod_1.z.object({
-    name: zod_1.z.string()
-});
-const IdTokenSchema = zod_1.z
-    .object({
-    rubygems_api_key: zod_1.z.string(),
-    name: zod_1.z.string(),
-    scopes: zod_1.z.array(zod_1.z.string()),
-    gem: RubygemSchema.optional(),
-    expires_at: zod_1.z.string().datetime({ offset: true })
-})
-    .transform((_a) => {
-    var { rubygems_api_key, expires_at } = _a, rest = __rest(_a, ["rubygems_api_key", "expires_at"]);
-    return Object.assign({ rubygemsApiKey: rubygems_api_key, expiresAt: expires_at }, rest);
-});
+const responses_1 = __nccwpck_require__(3008);
 function assumeRole(roleToAssume, audience, server) {
     return __awaiter(this, void 0, void 0, function* () {
         const webIdentityToken = yield core.getIDToken(audience);
@@ -256,10 +254,111 @@ function assumeRole(roleToAssume, audience, server) {
         });
         if (!res.result)
             throw new Error(`No valid role ${roleToAssume} found on ${server} for audience ${audience}`);
-        return IdTokenSchema.parse(res.result);
+        return responses_1.IdTokenSchema.parse(res.result);
     });
 }
 exports.assumeRole = assumeRole;
+
+
+/***/ }),
+
+/***/ 3008:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.IdTokenSchema = void 0;
+const zod_1 = __nccwpck_require__(3301);
+const RubygemSchema = zod_1.z.object({
+    name: zod_1.z.string()
+});
+exports.IdTokenSchema = zod_1.z
+    .object({
+    rubygems_api_key: zod_1.z.string(),
+    name: zod_1.z.string(),
+    scopes: zod_1.z.array(zod_1.z.string()),
+    gem: RubygemSchema.optional(),
+    expires_at: zod_1.z.string().datetime({ offset: true })
+})
+    .transform((_a) => {
+    var { rubygems_api_key, expires_at } = _a, rest = __rest(_a, ["rubygems_api_key", "expires_at"]);
+    return Object.assign({ rubygemsApiKey: rubygems_api_key, expiresAt: expires_at }, rest);
+});
+
+
+/***/ }),
+
+/***/ 7673:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.exchangeToken = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const http_client_1 = __nccwpck_require__(6255);
+const responses_1 = __nccwpck_require__(3008);
+function exchangeToken(audience, server) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const webIdentityToken = yield core.getIDToken(audience);
+        if (!webIdentityToken)
+            throw new Error(`Unable to get ID Token for audience ${audience}`);
+        const http = new http_client_1.HttpClient('rubygems-oidc-action');
+        const url = `${server}/api/v1/oidc/trusted_publisher/exchange_token`;
+        const res = yield http.postJson(url, { jwt: webIdentityToken }, {
+            'content-type': 'application/json',
+            accept: 'application/json'
+        });
+        if (!res.result)
+            throw new Error(`No trusted publisher configured for this workflow found on ${server} for audience ${audience}`);
+        return responses_1.IdTokenSchema.parse(res.result);
+    });
+}
+exports.exchangeToken = exchangeToken;
 
 
 /***/ }),

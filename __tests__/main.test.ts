@@ -15,6 +15,7 @@ import * as core from '@actions/core'
 
 import {configureApiToken} from '../src/configure-api-token'
 import {assumeRole} from '../src/oidc/assumeRole'
+import {exchangeToken} from '../src/oidc/trustedPublisher'
 
 jest.mock('os', () => {
   const originalModule = jest.requireActual('os') as any
@@ -122,6 +123,51 @@ describe('assumeRole', () => {
       rubygemsApiKey: 'API_KEY',
       scopes: ['push_rubygem']
     })
+  })
+})
+
+describe('exchangeToken', () => {
+  test('works', async () => {
+    jest.spyOn(core, 'getIDToken').mockReturnValue(Promise.resolve('ID_TOKEN'))
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/trusted_publisher/exchange_token', {
+        jwt: 'ID_TOKEN'
+      })
+      .reply(201, {
+        name: 'role name',
+        rubygems_api_key: 'API_KEY',
+        expires_at: '2021-01-01T00:00:00Z',
+        scopes: ['push_rubygem']
+      })
+
+    await expect(
+      exchangeToken('rubygems.org', 'https://rubygems.org')
+    ).resolves.toEqual({
+      expiresAt: '2021-01-01T00:00:00Z',
+      gem: undefined,
+      name: 'role name',
+      rubygemsApiKey: 'API_KEY',
+      scopes: ['push_rubygem']
+    })
+  })
+
+  test('handles a 404', async () => {
+    jest.spyOn(core, 'getIDToken').mockReturnValue(Promise.resolve('ID_TOKEN'))
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/trusted_publisher/exchange_token', {
+        jwt: 'ID_TOKEN'
+      })
+      .reply(404, '')
+
+    await expect(
+      exchangeToken('rubygems.org', 'https://rubygems.org')
+    ).rejects.toEqual(
+      new Error(
+        'No trusted publisher configured for this workflow found on https://rubygems.org for audience rubygems.org'
+      )
+    )
   })
 })
 

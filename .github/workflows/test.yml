@@ -15,7 +15,7 @@ jobs:
           npm install
       - run: |
           npm run all
-  test: # make sure the action works on a clean machine without building
+  test-oidc: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -42,8 +42,32 @@ jobs:
       - name: Test token
         run: |
           curl -v --fail '${{ matrix.gem-server }}/api/v1/oidc/api_key_roles/${{ matrix.roleToken }}' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}'
+  test-trusted-publisher: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        gem-server:
+          - 'rubygems.org'
+          - 'staging.rubygems.org'
+          - 'oidc-api-token.rubygems.org'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          gem-server: 'https://${{ matrix.gem-server }}'
+          audience: '${{ matrix.gem-server }}'
+      - name: Test token
+        run: |
+          output="$(curl -s -w "\n\n%{http_code}" -v -X POST 'https://${{ matrix.gem-server }}/api/v1/gems' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}' -H 'Accept: application/json')"
+          expected="$(printf "RubyGems.org cannot process this gem.\nPlease try rebuilding it and installing it locally to make sure it's valid.\nError:\npackage metadata is missing\n\n\n422")"
+          test "$output" = "$expected" || (echo "$output" && exit 1)
   test-all:
-    needs: test
+    needs: [test-oidc, test-trusted-publisher]
     runs-on: ubuntu-latest
     steps:
       - run: |
