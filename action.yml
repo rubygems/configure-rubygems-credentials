@@ -22,6 +22,10 @@ inputs:
   api-token:
     description: 'The rubygems api token to use for authentication.'
     required: false
+  trusted-publisher:
+    description: >-
+      Whether to configure the credentials as a trusted publisher. Defaults to true if no other configuration is given.
+    required: false
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
