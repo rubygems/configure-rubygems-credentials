@@ -28,8 +28,6 @@ jobs:
         gem-server:
           - 'https://rubygems.org'
         include:
-          - roleToken: rg_oidc_akr_f55fe1127adjkkcn8ty6 # Actions Test, all repos, 15min, push rubygem
-            gem-server: 'https://oidc-api-token.rubygems.org'
           - roleToken: rg_oidc_akr_y6txf9nm3c4kttxgnsgg
             gem-server: 'https://staging.rubygems.org'
 
@@ -53,7 +51,6 @@ jobs:
         gem-server:
           - 'rubygems.org'
           - 'staging.rubygems.org'
-          - 'oidc-api-token.rubygems.org'
 
     steps:
       - uses: actions/checkout@v4
