@@ -42,7 +42,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.configureApiToken = void 0;
+exports.configureApiToken = configureApiToken;
 const core = __importStar(__nccwpck_require__(2186));
 const io = __importStar(__nccwpck_require__(7436));
 const promises_1 = __nccwpck_require__(3292);
@@ -70,7 +70,6 @@ function configureApiToken(apiToken, server) {
         yield addCredentialToFile(credentialsFile, key, apiToken);
     });
 }
-exports.configureApiToken = configureApiToken;
 function addCredentialToFile(path, key, value) {
     return __awaiter(this, void 0, void 0, function* () {
         const credentials = yield readCredentials(path);
@@ -237,7 +236,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.assumeRole = void 0;
+exports.assumeRole = assumeRole;
 const core = __importStar(__nccwpck_require__(2186));
 const http_client_1 = __nccwpck_require__(6255);
 const responses_1 = __nccwpck_require__(3008);
@@ -257,7 +256,6 @@ function assumeRole(roleToAssume, audience, server) {
         return responses_1.IdTokenSchema.parse(res.result);
     });
 }
-exports.assumeRole = assumeRole;
 
 
 /***/ }),
@@ -338,7 +336,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.exchangeToken = void 0;
+exports.exchangeToken = exchangeToken;
 const core = __importStar(__nccwpck_require__(2186));
 const http_client_1 = __nccwpck_require__(6255);
 const responses_1 = __nccwpck_require__(3008);
@@ -358,7 +356,6 @@ function exchangeToken(audience, server) {
         return responses_1.IdTokenSchema.parse(res.result);
     });
 }
-exports.exchangeToken = exchangeToken;
 
 
 /***/ }),
