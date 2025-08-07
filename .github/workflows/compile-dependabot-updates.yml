@@ -1,0 +1,38 @@
+name: Compile Dependabot Updates
+
+on:
+  pull_request:
+
+jobs:
+  build-dependencies:
+    #         PR was opened by Dependabot                           PR has 'javascript' label
+    if: ${{ github.actor == 'dependabot[bot]' && contains(join(github.event.pull_request.labels.*.name, ','), 'javascript') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Pull Request
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persists-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and package
+        run: npm run all
+
+      - name: Commit and push build artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/
+          git commit -m "[dependabot skip] Update dist/ with compiled dependencies" && git push || exit 0
