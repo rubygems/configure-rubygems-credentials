@@ -6,11 +6,15 @@ on: # rebuild any PRs and main branch changes
       - main
       - 'releases/*'
 
+permissions: {}
+
 jobs:
   build: # make sure build/ci work properly
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
       - run: |
           npm install
       - run: |
@@ -32,14 +36,16 @@ jobs:
             gem-server: 'https://staging.rubygems.org'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
       - uses: ./
         with:
           role-to-assume: '${{ matrix.roleToken }}'
           gem-server: '${{ matrix.gem-server }}'
       - name: Test token
         run: |
-          curl -v --fail '${{ matrix.gem-server }}/api/v1/oidc/api_key_roles/${{ matrix.roleToken }}' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}'
+          curl -v --fail '${{ matrix.gem-server }}/api/v1/oidc/api_key_roles/${{ matrix.roleToken }}' -H "Authorization: $RUBYGEMS_API_KEY"
   test-trusted-publisher: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     permissions:
@@ -53,14 +59,16 @@ jobs:
           - 'staging.rubygems.org'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
       - uses: ./
         with:
           gem-server: 'https://${{ matrix.gem-server }}'
           audience: '${{ matrix.gem-server }}'
       - name: Test token
         run: |
-          output="$(curl -s -w "\n\n%{http_code}" -v -X POST 'https://${{ matrix.gem-server }}/api/v1/gems' -H 'Authorization: ${{ env.RUBYGEMS_API_KEY }}' -H 'Accept: application/json')"
+          output="$(curl -s -w "\n\n%{http_code}" -v -X POST 'https://${{ matrix.gem-server }}/api/v1/gems' -H "Authorization: $RUBYGEMS_API_KEY" -H 'Accept: application/json')"
           expected="$(printf "RubyGems.org cannot process this gem.\nPlease try rebuilding it and installing it locally to make sure it's valid.\nError:\npackage metadata is missing\n\n\n422")"
           test "$output" = "$expected" || (echo "$output" && exit 1)
   test-all:
