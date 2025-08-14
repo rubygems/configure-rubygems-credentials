@@ -4,19 +4,15 @@ on:
   pull_request:
 
 jobs:
-  build-dependencies:
+  build:
     #         PR was opened by Dependabot                           PR has 'javascript' label
     if: ${{ github.actor == 'dependabot[bot]' && contains(join(github.event.pull_request.labels.*.name, ','), 'javascript') }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - name: Checkout Pull Request
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          persists-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -29,6 +25,32 @@ jobs:
 
       - name: Build and package
         run: npm run all
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  commit-artifacts:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Pull Request
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
       - name: Commit and push build artifacts
         run: |
