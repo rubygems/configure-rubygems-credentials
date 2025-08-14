@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout Pull Request
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -45,6 +47,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
