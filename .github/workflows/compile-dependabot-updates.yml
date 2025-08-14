@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     #                   PR was opened by Dependabot                                      PR has 'javascript' label
-    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && contains(join(github.event.pull_request.labels.*.name, ','), 'javascript') }}
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'javascript') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
