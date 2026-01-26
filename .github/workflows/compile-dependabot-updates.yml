@@ -12,7 +12,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Pull Request
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.ref }}
@@ -44,7 +44,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout Pull Request
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@v6.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
