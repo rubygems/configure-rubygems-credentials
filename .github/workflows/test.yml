@@ -69,7 +69,7 @@ jobs:
       - name: Test token
         run: |
           output="$(curl -s -w "\n\n%{http_code}" -v -X POST 'https://${{ matrix.gem-server }}/api/v1/gems' -H "Authorization: $RUBYGEMS_API_KEY" -H 'Accept: application/json')"
-          expected="$(printf "RubyGems.org cannot process this gem.\nPlease try rebuilding it and installing it locally to make sure it's valid.\nError:\npackage metadata is missing\n\n\n422")"
+          expected="$(printf "RubyGems.org cannot process this gem.\nPlease try rebuilding it and installing it locally to make sure it's valid.\nError:\ngem package contains no entries\n\n\n422")"
           test "$output" = "$expected" || (echo "$output" && exit 1)
   test-all:
     needs: [test-oidc, test-trusted-publisher]
