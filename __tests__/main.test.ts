@@ -22,6 +22,7 @@ jest.mock('os', () => {
 
   return {
     __esModule: true, // Use it when dealing with esModules
+    default: originalModule,
     ...originalModule,
     homedir: jest.fn()
   }
