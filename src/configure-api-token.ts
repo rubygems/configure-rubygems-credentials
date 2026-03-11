@@ -51,7 +51,7 @@ async function readCredentials(
   try {
     const contents = await readFile(path, 'utf8')
     return YAML.parseDocument(contents)
-  } catch (error) {
+  } catch {
     return new YAML.Document(
       new YAML.YAMLMap(
         new YAML.Schema({toStringDefaults: {collectionStyle: 'block'}})

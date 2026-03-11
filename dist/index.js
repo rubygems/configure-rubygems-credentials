@@ -87,7 +87,7 @@ function readCredentials(path) {
             const contents = yield (0, promises_1.readFile)(path, 'utf8');
             return yaml_1.default.parseDocument(contents);
         }
-        catch (error) {
+        catch (_a) {
             return new yaml_1.default.Document(new yaml_1.default.YAMLMap(new yaml_1.default.Schema({ toStringDefaults: { collectionStyle: 'block' } })));
         }
     });
