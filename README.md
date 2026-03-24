@@ -16,9 +16,9 @@ and exports environment variables used by both `rubygems` and
 <!-- toc -->
 
 - [Usage](#usage)
-  - [Examples](#examples)
-    - [OIDC (recommended)](#oidc-recommended)
-    - [Static API token in repository secrets](#static-api-token-in-repository-secrets)
+  - [Trusted Publisher (recommended)](#trusted-publisher-recommended)
+  - [OIDC API Key Role](#oidc-api-key-role)
+  - [Static API token in repository secrets](#static-api-token-in-repository-secrets)
   - [Use with the RubyGems CLI](#use-with-the-rubygems-cli)
 - [License Summary](#license-summary)
 - [Security Disclosures](#security-disclosures)
@@ -27,11 +27,31 @@ and exports environment variables used by both `rubygems` and
 
 ## Usage
 
-We recommend that
-you use GitHub's OIDC provider in conjunction with a configured
-RubyGems OIDC API Key Role.
+There are three ways to configure RubyGems credentials:
 
-To do that, you would add the following step to your workflow:
+1. **Trusted Publisher (recommended)**: Uses OIDC without any API tokens or secrets.
+2. **OIDC API Key Role**: Uses OIDC with a pre-configured API Key Role on RubyGems.org.
+3. **Static API token**: Uses a RubyGems API token stored in repository secrets.
+
+### Trusted Publisher (recommended)
+
+The simplest approach is to use [Trusted Publishing](https://guides.rubygems.org/trusted-publishing/).
+Configure a trusted publisher for your gem on RubyGems.org, then use:
+
+```yaml
+- name: Configure RubyGems Credentials
+  uses: rubygems/configure-rubygems-credentials@main
+```
+
+No additional inputs are required. The action will automatically use OIDC to authenticate
+with RubyGems.org as a trusted publisher.
+
+### OIDC API Key Role
+
+Alternatively, you can create an OIDC API Key Role on RubyGems.org and reference it
+with the `role-to-assume` input. The value is the **OIDC API Key Role token**
+(a string starting with `rg_oidc_akr_`), which you can find on the
+"OIDC: Create" page of your gem on RubyGems.org.
 
 ```yaml
 - name: Configure RubyGems Credentials
@@ -58,9 +78,7 @@ jobs:
     steps:
       - uses: rubygems/configure-rubygems-credentials@main
         with:
-          role-to-assume: 2
-          gem-server: 'https://oidc-api-token.rubygems.org'
-          audience: 'https://oidc-api-token.rubygems.org'
+          role-to-assume: rg_oidc_akr_f55fe1127adjkkcn8ty6
       - uses: actions/checkout@v3
       - name: Set remote URL
         run: |
@@ -79,20 +97,7 @@ jobs:
 See [action.yml](action.yml) for the full documentation for this action's inputs
 and outputs.
 
-### Examples
-
-#### OIDC (recommended)
-
-```yaml
-- name: Configure RubyGems Credentials
-  uses: rubygems/configure-rubygems-credentials@main
-  with:
-    role-to-assume: 3
-```
-
-In this example, the Action will load the OIDC token from the GitHub-provided environment variable and use it to assume the role `3`.
-
-#### Static API token in repository secrets
+### Static API token in repository secrets
 
 ```yaml
 - name: Configure RubyGems Credentials
