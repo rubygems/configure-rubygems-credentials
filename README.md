@@ -33,6 +33,14 @@ There are three ways to configure RubyGems credentials:
 2. **OIDC API Key Role**: Uses OIDC with a pre-configured API Key Role on RubyGems.org.
 3. **Static API token**: Uses a RubyGems API token stored in repository secrets.
 
+> **Note**: The OIDC-based configurations (**Trusted Publisher** and **OIDC API Key Role**) require the `id-token: write` permission in your workflow, for example:
+>
+> ```yaml
+> permissions:
+>   id-token: write
+>   contents: read
+> ```
+
 ### Trusted Publisher (recommended)
 
 The simplest approach is to use [Trusted Publishing](https://guides.rubygems.org/trusted-publishing/).
