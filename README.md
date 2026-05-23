@@ -75,7 +75,8 @@ workflow. As an example, here is a complete workflow file that pushes a gem rele
 
 ```yaml
 on:
-  - push
+  push:
+    tags: ['v*']
 
 jobs:
   job:
@@ -87,7 +88,7 @@ jobs:
       - uses: rubygems/configure-rubygems-credentials@main
         with:
           role-to-assume: rg_oidc_akr_f55fe1127adjkkcn8ty6
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Set remote URL
         run: |
           git config --global user.email "$(git log -1 --pretty=format:'%ae')"
@@ -96,14 +97,17 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2.1'
-          bundler-cache: true
+          ruby-version: '4.0.5'
+          bundler-cache: false
       - name: Release
         run: bundle exec rake release
 ```
 
 See [action.yml](action.yml) for the full documentation for this action's inputs
 and outputs.
+
+> [!NOTE]
+> It is recommended that you replace the version ranges in the Actions with specific SHA hashes to ensure that the workflow does not break with updates, and does not pick up a new version if any of these Actions were compromised.
 
 ### Static API token in repository secrets
 
@@ -118,7 +122,7 @@ In this example, the secret `RUBYGEMS_API_TOKEN` contains a string like `rubygem
 
 ### Use with the RubyGems CLI
 
-This workflow does _not_ install the rubygems
+This workflow does _not_ install the rubygems CLI
 into your environment.
 
 ## License Summary
