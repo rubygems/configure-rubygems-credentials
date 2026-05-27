@@ -99,6 +99,8 @@ jobs:
         with:
           ruby-version: '4.0.5'
           bundler-cache: false
+      - name: Install dependencies
+        run: bundle install
       - name: Release
         run: bundle exec rake release
 ```
