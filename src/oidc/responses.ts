@@ -10,7 +10,7 @@ export const IdTokenSchema = z
     name: z.string(),
     scopes: z.array(z.string()),
     gem: RubygemSchema.optional(),
-    expires_at: z.string().datetime({offset: true})
+    expires_at: z.iso.datetime({offset: true})
   })
   .transform(({rubygems_api_key, expires_at, ...rest}) => {
     return {
