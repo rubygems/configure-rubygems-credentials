@@ -39,15 +39,6 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -59,48 +50,42 @@ const promises_1 = __nccwpck_require__(1943);
 const os_1 = __nccwpck_require__(857);
 const path_1 = __nccwpck_require__(6928);
 const yaml_1 = __importDefault(__nccwpck_require__(8815));
-function configureApiToken(apiToken, server) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!apiToken)
-            throw new Error('Empty apiToken is not supported');
-        core.exportVariable('RUBYGEMS_API_KEY', apiToken);
-        core.exportVariable('BUNDLE_GEM__PUSH_KEY', apiToken);
-        core.exportVariable('GEM_HOST_API_KEY', apiToken);
-        core.setSecret(apiToken);
-        const gemDir = (0, path_1.join)((0, os_1.homedir)(), '.gem');
-        yield io.mkdirP(gemDir);
-        const credentialsFile = (0, path_1.join)(gemDir, 'credentials');
-        let key;
-        if (server === 'https://rubygems.org') {
-            key = ':rubygems_api_key';
-        }
-        else {
-            key = `${server}`;
-        }
-        yield addCredentialToFile(credentialsFile, key, apiToken);
+async function configureApiToken(apiToken, server) {
+    if (!apiToken)
+        throw new Error('Empty apiToken is not supported');
+    core.exportVariable('RUBYGEMS_API_KEY', apiToken);
+    core.exportVariable('BUNDLE_GEM__PUSH_KEY', apiToken);
+    core.exportVariable('GEM_HOST_API_KEY', apiToken);
+    core.setSecret(apiToken);
+    const gemDir = (0, path_1.join)((0, os_1.homedir)(), '.gem');
+    await io.mkdirP(gemDir);
+    const credentialsFile = (0, path_1.join)(gemDir, 'credentials');
+    let key;
+    if (server === 'https://rubygems.org') {
+        key = ':rubygems_api_key';
+    }
+    else {
+        key = `${server}`;
+    }
+    await addCredentialToFile(credentialsFile, key, apiToken);
+}
+async function addCredentialToFile(path, key, value) {
+    const credentials = await readCredentials(path);
+    credentials.add({ key, value: new yaml_1.default.Scalar(value) });
+    await (0, promises_1.writeFile)(path, credentials.toString(), {
+        encoding: 'utf8',
+        mode: 0o600,
+        flag: 'w'
     });
 }
-function addCredentialToFile(path, key, value) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const credentials = yield readCredentials(path);
-        credentials.add({ key, value: new yaml_1.default.Scalar(value) });
-        yield (0, promises_1.writeFile)(path, credentials.toString(), {
-            encoding: 'utf8',
-            mode: 0o600,
-            flag: 'w'
-        });
-    });
-}
-function readCredentials(path) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const contents = yield (0, promises_1.readFile)(path, 'utf8');
-            return yaml_1.default.parseDocument(contents);
-        }
-        catch (_a) {
-            return new yaml_1.default.Document(new yaml_1.default.YAMLMap(new yaml_1.default.Schema({ toStringDefaults: { collectionStyle: 'block' } })));
-        }
-    });
+async function readCredentials(path) {
+    try {
+        const contents = await (0, promises_1.readFile)(path, 'utf8');
+        return yaml_1.default.parseDocument(contents);
+    }
+    catch {
+        return new yaml_1.default.Document(new yaml_1.default.YAMLMap(new yaml_1.default.Schema({ toStringDefaults: { collectionStyle: 'block' } })));
+    }
 }
 
 
@@ -144,74 +129,63 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const configure_api_token_1 = __nccwpck_require__(6741);
 const assumeRole_1 = __nccwpck_require__(7500);
 const trustedPublisher_1 = __nccwpck_require__(7143);
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const gemServer = core.getInput('gem-server');
-            const audience = core.getInput('audience');
-            const roleToAssume = core.getInput('role-to-assume');
-            const apiToken = core.getInput('api-token');
-            const trustedPublisher = (() => {
-                const trustedPublisherConfigured = !!core.getInput('trusted-publisher');
-                if (!trustedPublisherConfigured && !apiToken && !roleToAssume) {
-                    // default to trusted publishing if no api-token or role-to-assume is specified and trusted-publisher is not configured
-                    return true;
-                }
-                else if (trustedPublisherConfigured) {
-                    return core.getBooleanInput('trusted-publisher');
-                }
-                else {
-                    return false;
-                }
-            })();
-            if (!gemServer)
-                throw new Error('Missing gem-server input');
-            if (apiToken) {
-                if (audience)
-                    throw new Error('Cannot specify audience when using api-token');
-                if (roleToAssume)
-                    throw new Error('Cannot specify role-to-assume when using api-token');
-                if (trustedPublisher)
-                    throw new Error('Cannot specify trusted-publisher when using api-token');
-                yield (0, configure_api_token_1.configureApiToken)(apiToken, gemServer);
+async function run() {
+    try {
+        const gemServer = core.getInput('gem-server');
+        const audience = core.getInput('audience');
+        const roleToAssume = core.getInput('role-to-assume');
+        const apiToken = core.getInput('api-token');
+        const trustedPublisher = (() => {
+            const trustedPublisherConfigured = !!core.getInput('trusted-publisher');
+            if (!trustedPublisherConfigured && !apiToken && !roleToAssume) {
+                // default to trusted publishing if no api-token or role-to-assume is specified and trusted-publisher is not configured
+                return true;
             }
-            else if (roleToAssume) {
-                if (!audience)
-                    throw new Error('Missing audience input');
-                if (trustedPublisher)
-                    throw new Error('Cannot specify trusted-publisher when using role-to-assume');
-                const oidcIdToken = yield (0, assumeRole_1.assumeRole)(roleToAssume, audience, gemServer);
-                yield (0, configure_api_token_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
-            }
-            else if (trustedPublisher) {
-                if (!audience)
-                    throw new Error('Missing audience input');
-                const oidcIdToken = yield (0, trustedPublisher_1.exchangeToken)(audience, gemServer);
-                yield (0, configure_api_token_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
+            else if (trustedPublisherConfigured) {
+                return core.getBooleanInput('trusted-publisher');
             }
             else {
-                throw new Error('Missing api-token or role-to-assume input');
+                return false;
             }
+        })();
+        if (!gemServer)
+            throw new Error('Missing gem-server input');
+        if (apiToken) {
+            if (audience)
+                throw new Error('Cannot specify audience when using api-token');
+            if (roleToAssume)
+                throw new Error('Cannot specify role-to-assume when using api-token');
+            if (trustedPublisher)
+                throw new Error('Cannot specify trusted-publisher when using api-token');
+            await (0, configure_api_token_1.configureApiToken)(apiToken, gemServer);
         }
-        catch (error) {
-            if (error instanceof Error)
-                core.setFailed(error.message);
+        else if (roleToAssume) {
+            if (!audience)
+                throw new Error('Missing audience input');
+            if (trustedPublisher)
+                throw new Error('Cannot specify trusted-publisher when using role-to-assume');
+            const oidcIdToken = await (0, assumeRole_1.assumeRole)(roleToAssume, audience, gemServer);
+            await (0, configure_api_token_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
         }
-    });
+        else if (trustedPublisher) {
+            if (!audience)
+                throw new Error('Missing audience input');
+            const oidcIdToken = await (0, trustedPublisher_1.exchangeToken)(audience, gemServer);
+            await (0, configure_api_token_1.configureApiToken)(oidcIdToken.rubygemsApiKey, gemServer);
+        }
+        else {
+            throw new Error('Missing api-token or role-to-assume input');
+        }
+    }
+    catch (error) {
+        if (error instanceof Error)
+            core.setFailed(error.message);
+    }
 }
 run();
 
@@ -256,56 +230,34 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.assumeRole = assumeRole;
 const core = __importStar(__nccwpck_require__(7484));
 const http_client_1 = __nccwpck_require__(4844);
 const responses_1 = __nccwpck_require__(9747);
-function assumeRole(roleToAssume, audience, server) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const webIdentityToken = yield core.getIDToken(audience);
-        if (!webIdentityToken)
-            throw new Error(`Unable to get ID Token for audience ${audience}`);
-        const http = new http_client_1.HttpClient('rubygems-oidc-action');
-        const url = `${server}/api/v1/oidc/api_key_roles/${roleToAssume}/assume_role`;
-        const res = yield http.postJson(url, { jwt: webIdentityToken }, {
-            'content-type': 'application/json',
-            accept: 'application/json'
-        });
-        if (!res.result)
-            throw new Error(`No valid role ${roleToAssume} found on ${server} for audience ${audience}`);
-        return responses_1.IdTokenSchema.parse(res.result);
+async function assumeRole(roleToAssume, audience, server) {
+    const webIdentityToken = await core.getIDToken(audience);
+    if (!webIdentityToken)
+        throw new Error(`Unable to get ID Token for audience ${audience}`);
+    const http = new http_client_1.HttpClient('rubygems-oidc-action');
+    const url = `${server}/api/v1/oidc/api_key_roles/${roleToAssume}/assume_role`;
+    const res = await http.postJson(url, { jwt: webIdentityToken }, {
+        'content-type': 'application/json',
+        accept: 'application/json'
     });
+    if (!res.result)
+        throw new Error(`No valid role ${roleToAssume} found on ${server} for audience ${audience}`);
+    return responses_1.IdTokenSchema.parse(res.result);
 }
 
 
 /***/ }),
 
 /***/ 9747:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IdTokenSchema = void 0;
 const zod_1 = __nccwpck_require__(4809);
@@ -320,9 +272,12 @@ exports.IdTokenSchema = zod_1.z
     gem: RubygemSchema.optional(),
     expires_at: zod_1.z.string().datetime({ offset: true })
 })
-    .transform((_a) => {
-    var { rubygems_api_key, expires_at } = _a, rest = __rest(_a, ["rubygems_api_key", "expires_at"]);
-    return Object.assign({ rubygemsApiKey: rubygems_api_key, expiresAt: expires_at }, rest);
+    .transform(({ rubygems_api_key, expires_at, ...rest }) => {
+    return {
+        rubygemsApiKey: rubygems_api_key,
+        expiresAt: expires_at,
+        ...rest
+    };
 });
 
 
@@ -366,35 +321,24 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.exchangeToken = exchangeToken;
 const core = __importStar(__nccwpck_require__(7484));
 const http_client_1 = __nccwpck_require__(4844);
 const responses_1 = __nccwpck_require__(9747);
-function exchangeToken(audience, server) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const webIdentityToken = yield core.getIDToken(audience);
-        if (!webIdentityToken)
-            throw new Error(`Unable to get ID Token for audience ${audience}`);
-        const http = new http_client_1.HttpClient('rubygems-oidc-action');
-        const url = `${server}/api/v1/oidc/trusted_publisher/exchange_token`;
-        const res = yield http.postJson(url, { jwt: webIdentityToken }, {
-            'content-type': 'application/json',
-            accept: 'application/json'
-        });
-        if (!res.result)
-            throw new Error(`No trusted publisher configured for this workflow found on ${server} for audience ${audience}`);
-        return responses_1.IdTokenSchema.parse(res.result);
+async function exchangeToken(audience, server) {
+    const webIdentityToken = await core.getIDToken(audience);
+    if (!webIdentityToken)
+        throw new Error(`Unable to get ID Token for audience ${audience}`);
+    const http = new http_client_1.HttpClient('rubygems-oidc-action');
+    const url = `${server}/api/v1/oidc/trusted_publisher/exchange_token`;
+    const res = await http.postJson(url, { jwt: webIdentityToken }, {
+        'content-type': 'application/json',
+        accept: 'application/json'
     });
+    if (!res.result)
+        throw new Error(`No trusted publisher configured for this workflow found on ${server} for audience ${audience}`);
+    return responses_1.IdTokenSchema.parse(res.result);
 }
 
 
