@@ -17,18 +17,14 @@ export default tseslint.config(
     },
     languageOptions: {
       parserOptions: {
-        ecmaVersion: 9,
         sourceType: 'module',
         project: './tsconfig.json'
       }
     },
     rules: {
-      'filenamesPlugin/match-regex': 'off',
       'i18n-text/no-en': 'off',
       'eslint-comments/no-use': 'off',
       'import/no-namespace': 'off',
-      'importPlugin/no-namespace': 'off',
-      'importPlugin/no-unresolved': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/explicit-member-accessibility': [
