@@ -9,24 +9,25 @@ import {
 } from '@jest/globals'
 import {readFile} from 'fs/promises'
 import mockFS from 'mock-fs'
-import * as os from 'os'
+import {homedir} from 'os'
+import {join} from 'path'
 import YAML from 'yaml'
-import * as core from '@actions/core'
 
-import {configureApiToken} from '../src/configure-api-token'
-import {assumeRole} from '../src/oidc/assumeRole'
-import {exchangeToken} from '../src/oidc/trustedPublisher'
+// Module namespaces are immutable under Jest's ESM runtime, so
+// @actions/core has to be replaced as a whole module instead of having
+// individual exports spied upon.
+jest.unstable_mockModule('@actions/core', () => ({
+  getIDToken: jest.fn<() => Promise<string>>(),
+  exportVariable: jest.fn(),
+  setSecret: jest.fn()
+}))
 
-jest.mock('os', () => {
-  const originalModule = jest.requireActual('os') as any
+const core = await import('@actions/core')
+const {configureApiToken} = await import('../src/configure-api-token')
+const {assumeRole} = await import('../src/oidc/assumeRole')
+const {exchangeToken} = await import('../src/oidc/trustedPublisher')
 
-  return {
-    __esModule: true, // Use it when dealing with esModules
-    default: originalModule,
-    ...originalModule,
-    homedir: jest.fn()
-  }
-})
+const credentialsFile = join(homedir(), '.gem', 'credentials')
 
 describe('configureApiToken', () => {
   test('throws no token', async () => {
@@ -42,13 +43,12 @@ describe('configureApiToken', () => {
   })
 
   test('adding default token', async () => {
-    mockHomedir('/home/runner')
     mockFS({})
 
     await configureApiToken('token', 'https://rubygems.org')
 
     await expect(
-      readFile('/home/runner/.gem/credentials', 'utf8').then(YAML.parse)
+      readFile(credentialsFile, 'utf8').then(YAML.parse)
     ).resolves.toEqual({':rubygems_api_key': 'token'})
     expect(exportedVariables).toEqual({
       BUNDLE_GEM__PUSH_KEY: 'token',
@@ -58,13 +58,12 @@ describe('configureApiToken', () => {
   })
 
   test('adding custom token', async () => {
-    mockHomedir('/home/runner')
     mockFS({})
 
     await configureApiToken('token', 'https://oidc-api-token.rubygems.org')
 
     await expect(
-      readFile('/home/runner/.gem/credentials', 'utf8').then(YAML.parse)
+      readFile(credentialsFile, 'utf8').then(YAML.parse)
     ).resolves.toEqual({'https://oidc-api-token.rubygems.org': 'token'})
     expect(exportedVariables).toEqual({
       BUNDLE_GEM__PUSH_KEY: 'token',
@@ -76,7 +75,7 @@ describe('configureApiToken', () => {
 
 describe('assumeRole', () => {
   test('works', async () => {
-    jest.spyOn(core, 'getIDToken').mockReturnValue(Promise.resolve('ID_TOKEN'))
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
 
     nock('https://rubygems.org')
       .post('/api/v1/oidc/api_key_roles/1/assume_role', {
@@ -101,7 +100,7 @@ describe('assumeRole', () => {
   })
 
   test('works when scoped to a gem', async () => {
-    jest.spyOn(core, 'getIDToken').mockReturnValue(Promise.resolve('ID_TOKEN'))
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
 
     nock('https://rubygems.org')
       .post('/api/v1/oidc/api_key_roles/1/assume_role', {
@@ -129,7 +128,7 @@ describe('assumeRole', () => {
 
 describe('exchangeToken', () => {
   test('works', async () => {
-    jest.spyOn(core, 'getIDToken').mockReturnValue(Promise.resolve('ID_TOKEN'))
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
 
     nock('https://rubygems.org')
       .post('/api/v1/oidc/trusted_publisher/exchange_token', {
@@ -154,7 +153,7 @@ describe('exchangeToken', () => {
   })
 
   test('handles a 404', async () => {
-    jest.spyOn(core, 'getIDToken').mockReturnValue(Promise.resolve('ID_TOKEN'))
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
 
     nock('https://rubygems.org')
       .post('/api/v1/oidc/trusted_publisher/exchange_token', {
@@ -172,14 +171,6 @@ describe('exchangeToken', () => {
   })
 })
 
-function mockHomedir(homedir: string) {
-  mockOf(os.homedir).mockReturnValue(homedir)
-}
-
-function mockOf<T extends (...args: any) => any>(dep: T): jest.Mock<T> {
-  return <jest.Mock<T>>(<unknown>dep)
-}
-
 let exportedVariables: Record<string, string>
 let secrets: string[]
 
@@ -191,10 +182,10 @@ beforeEach(() => {
 
   exportedVariables = {}
   secrets = []
-  jest.spyOn(core, 'exportVariable').mockImplementation((name, value) => {
+  jest.mocked(core.exportVariable).mockImplementation((name, value) => {
     exportedVariables[name] = value
   })
-  jest.spyOn(core, 'setSecret').mockImplementation(value => {
+  jest.mocked(core.setSecret).mockImplementation(value => {
     secrets.push(value)
   })
 })
