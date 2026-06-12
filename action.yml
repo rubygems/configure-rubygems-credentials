@@ -27,5 +27,5 @@ inputs:
       Whether to configure the credentials as a trusted publisher. Defaults to true if no other configuration is given.
     required: false
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
