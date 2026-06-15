@@ -1,14 +1,12 @@
-import github from 'eslint-plugin-github'
+import js from '@eslint/js'
 import jest from 'eslint-plugin-jest'
 import tseslint from 'typescript-eslint'
-
-const githubConfigs = github.getFlatConfigs()
 
 export default tseslint.config(
   {
     ignores: ['dist/', 'lib/', 'node_modules/', 'jest.config.js']
   },
-  githubConfigs.recommended,
+  js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     files: ['**/*.ts'],
@@ -22,9 +20,6 @@ export default tseslint.config(
       }
     },
     rules: {
-      'i18n-text/no-en': 'off',
-      'eslint-comments/no-use': 'off',
-      'import/no-namespace': 'off',
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/explicit-member-accessibility': [
@@ -35,7 +30,6 @@ export default tseslint.config(
       '@typescript-eslint/array-type': 'error',
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/ban-ts-comment': 'error',
-      camelcase: 'off',
       '@typescript-eslint/consistent-type-assertions': 'error',
       '@typescript-eslint/explicit-function-return-type': [
         'error',
@@ -59,7 +53,6 @@ export default tseslint.config(
       '@typescript-eslint/promise-function-async': 'error',
       '@typescript-eslint/require-array-sort-compare': 'error',
       '@typescript-eslint/restrict-plus-operands': 'error',
-      semi: 'off',
       '@typescript-eslint/unbound-method': 'error'
     }
   }
