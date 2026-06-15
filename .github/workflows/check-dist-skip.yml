@@ -1,0 +1,21 @@
+# Companion to check-dist.yml for the "skipped but required" deadlock.
+# check-dist.yml ignores '**.md', so docs-only PRs never trigger it and the
+# required `check-dist` status stays pending forever. This workflow runs on the
+# complementary path filter ('**.md') and reports a successful `check-dist`
+# context so docs-only PRs are not blocked.
+name: Check dist/ (docs-only)
+
+on:
+  pull_request:
+    paths:
+      - '**.md'
+
+permissions: {}
+
+jobs:
+  check-dist:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: echo "Docs-only change; dist check not required."
