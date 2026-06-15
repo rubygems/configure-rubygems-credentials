@@ -34,7 +34,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/mock-fs": "^4.13.4",
-    "@types/node": "^24.13.2",
+    "@types/node": "^25.9.3",
     "@vercel/ncc": "^0.38.4",
     "eslint": "^10.5.0",
     "jest": "^30.4.2",
