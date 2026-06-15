@@ -20,6 +20,8 @@ jobs:
       - run: |
           npm run all
   test-oidc: # make sure the action works on a clean machine without building
+    # OIDC is not available for pull requests from forks, so skip these jobs there.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -47,6 +49,8 @@ jobs:
         run: |
           curl -v --fail '${{ matrix.gem-server }}/api/v1/oidc/api_key_roles/${{ matrix.roleToken }}' -H "Authorization: $RUBYGEMS_API_KEY"
   test-trusted-publisher: # make sure the action works on a clean machine without building
+    # OIDC is not available for pull requests from forks, so skip these jobs there.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -73,7 +77,20 @@ jobs:
           test "$output" = "$expected" || (echo "$output" && exit 1)
   test-all:
     needs: [test-oidc, test-trusted-publisher]
+    # Run even when the OIDC jobs are skipped on fork pull requests, so this
+    # required check resolves correctly instead of being stuck as skipped.
+    if: always()
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          true
+      - name: Check OIDC job results
+        env:
+          TEST_OIDC_RESULT: ${{ needs.test-oidc.result }}
+          TEST_TRUSTED_PUBLISHER_RESULT: ${{ needs.test-trusted-publisher.result }}
+        run: |
+          echo "test-oidc: $TEST_OIDC_RESULT"
+          echo "test-trusted-publisher: $TEST_TRUSTED_PUBLISHER_RESULT"
+          for result in "$TEST_OIDC_RESULT" "$TEST_TRUSTED_PUBLISHER_RESULT"; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              exit 1
+            fi
+          done
