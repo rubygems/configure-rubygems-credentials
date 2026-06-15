@@ -32,21 +32,18 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/mock-fs": "^4.13.4",
     "@types/node": "^24.13.2",
-    "@typescript-eslint/eslint-plugin": "^8.58.2",
-    "@typescript-eslint/parser": "^8.59.1",
     "@vercel/ncc": "^0.38.4",
-    "eslint": "^9.38.0",
-    "eslint-plugin-github": "^6.0.0",
-    "eslint-plugin-jest": "^29.15.2",
-    "eslint-plugin-prettier": "^5.5.5",
+    "eslint": "^10.5.0",
     "jest": "^30.4.2",
     "js-yaml": "^4.1.1",
     "mock-fs": "^5.5.0",
     "nock": "^14.0.11",
     "prettier": "^3.3.3",
     "ts-jest": "^29.4.9",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0"
   }
 }
