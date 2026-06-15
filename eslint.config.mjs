@@ -1,5 +1,4 @@
 import js from '@eslint/js'
-import jest from 'eslint-plugin-jest'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
@@ -10,9 +9,6 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ['**/*.ts'],
-    plugins: {
-      jest
-    },
     languageOptions: {
       parserOptions: {
         sourceType: 'module',
