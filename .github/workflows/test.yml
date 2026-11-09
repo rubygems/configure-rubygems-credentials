@@ -46,7 +46,7 @@ jobs:
           role-to-assume: '${{ matrix.roleToken }}'
           gem-server: '${{ matrix.gem-server }}'
       - name: Test token
-        # Keys minted from a role lack the access_oidc_api_key_roles scope, so a live key gets this 403 while an invalid one gets 401.
+        # These roles do not grant the access_oidc_api_key_roles scope, so a live key gets this 403 while an invalid one gets 401.
         run: |
           output="$(curl -s -w "\n%{http_code}" -v '${{ matrix.gem-server }}/api/v1/oidc/api_key_roles/${{ matrix.roleToken }}' -H "Authorization: $RUBYGEMS_API_KEY")"
           expected="$(printf '{"error":"This API key cannot perform the specified action on this gem."}\n403')"
