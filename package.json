@@ -8,7 +8,7 @@
     "build": "tsc",
     "format": "prettier --write \"**/*.ts\"",
     "format-check": "prettier --check \"**/*.ts\"",
-    "lint": "eslint \"src/**/*.ts\"",
+    "lint": "oxlint --type-aware src",
     "package": "ncc build --source-map --license licenses.txt",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
@@ -32,19 +32,18 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@swc/core": "^1.16.22",
     "@swc/jest": "^0.2.39",
     "@types/mock-fs": "^4.13.4",
     "@types/node": "^26.0.1",
     "@vercel/ncc": "^0.45.0",
-    "eslint": "^10.6.0",
     "jest": "^30.4.2",
     "js-yaml": "^5.2.2",
     "mock-fs": "^5.5.0",
     "nock": "^14.0.11",
+    "oxlint": "^1.95.0",
+    "oxlint-tsgolint": "^7.0.2008",
     "prettier": "^3.3.3",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0"
+    "typescript": "^6.0.3"
   }
 }
