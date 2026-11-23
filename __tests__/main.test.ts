@@ -171,6 +171,49 @@ describe('exchangeToken', () => {
     })
   })
 
+  test('sends the owner', async () => {
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/trusted_publisher/exchange_token', {
+        jwt: 'ID_TOKEN',
+        owner: '12345'
+      })
+      .reply(201, {
+        name: 'role name',
+        rubygems_api_key: 'API_KEY',
+        expires_at: '2021-01-01T00:00:00Z',
+        owner: 'gem-owner',
+        scopes: ['push_rubygem']
+      })
+
+    await expect(
+      exchangeToken('rubygems.org', 'https://rubygems.org', '12345')
+    ).resolves.toEqual({
+      expiresAt: '2021-01-01T00:00:00Z',
+      gem: undefined,
+      name: 'role name',
+      owner: 'gem-owner',
+      rubygemsApiKey: 'API_KEY',
+      scopes: ['push_rubygem']
+    })
+  })
+
+  test('rejects an unknown owner', async () => {
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/trusted_publisher/exchange_token', {
+        jwt: 'ID_TOKEN',
+        owner: '12345'
+      })
+      .reply(400, {error: 'Unknown owner "12345"'})
+
+    await expect(
+      exchangeToken('rubygems.org', 'https://rubygems.org', '12345')
+    ).rejects.toThrow('Unknown owner')
+  })
+
   test('handles a 404', async () => {
     jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
 

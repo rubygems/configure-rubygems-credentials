@@ -4,7 +4,8 @@ import {IdToken, IdTokenSchema} from './responses'
 
 export async function exchangeToken(
   audience: string,
-  server: string
+  server: string,
+  owner?: string
 ): Promise<IdToken> {
   const webIdentityToken = await core.getIDToken(audience)
   if (!webIdentityToken)
@@ -13,7 +14,7 @@ export async function exchangeToken(
   const url = `${server}/api/v1/oidc/trusted_publisher/exchange_token`
   const res = await http.postJson<IdToken>(
     url,
-    {jwt: webIdentityToken},
+    owner ? {jwt: webIdentityToken, owner} : {jwt: webIdentityToken},
     {
       'content-type': 'application/json',
       accept: 'application/json'
