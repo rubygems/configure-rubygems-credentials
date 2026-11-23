@@ -42485,7 +42485,7 @@ class Doc {
 const version = {
     major: 4,
     minor: 6,
-    patch: 6,
+    patch: 7,
 };
 
 ;// CONCATENATED MODULE: ./node_modules/zod/v4/core/schemas.js
