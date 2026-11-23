@@ -124,6 +124,25 @@ describe('assumeRole', () => {
       scopes: ['push_rubygem']
     })
   })
+
+  test('accepts expires_at without seconds', async () => {
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/api_key_roles/1/assume_role', {
+        jwt: 'ID_TOKEN'
+      })
+      .reply(201, {
+        name: 'role name',
+        rubygems_api_key: 'API_KEY',
+        expires_at: '2021-01-01T00:00+09:00',
+        scopes: ['push_rubygem']
+      })
+
+    await expect(
+      assumeRole('1', 'rubygems.org', 'https://rubygems.org')
+    ).resolves.toMatchObject({expiresAt: '2021-01-01T00:00+09:00'})
+  })
 })
 
 describe('exchangeToken', () => {
@@ -168,6 +187,54 @@ describe('exchangeToken', () => {
         'No trusted publisher configured for this workflow found on https://rubygems.org for audience rubygems.org'
       )
     )
+  })
+
+  test('accepts expires_at without seconds', async () => {
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/trusted_publisher/exchange_token', {
+        jwt: 'ID_TOKEN'
+      })
+      .reply(201, {
+        name: 'role name',
+        rubygems_api_key: 'API_KEY',
+        expires_at: '2021-01-01T00:00Z',
+        scopes: ['push_rubygem']
+      })
+
+    await expect(
+      exchangeToken('rubygems.org', 'https://rubygems.org')
+    ).resolves.toMatchObject({expiresAt: '2021-01-01T00:00Z'})
+  })
+
+  test('reports an invalid expires_at as a single datetime issue', async () => {
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/trusted_publisher/exchange_token', {
+        jwt: 'ID_TOKEN'
+      })
+      .reply(201, {
+        name: 'role name',
+        rubygems_api_key: 'API_KEY',
+        expires_at: 'tomorrow',
+        scopes: ['push_rubygem']
+      })
+
+    const error = await exchangeToken(
+      'rubygems.org',
+      'https://rubygems.org'
+    ).catch(e => e)
+    expect(JSON.parse(error.message)).toMatchObject([
+      {
+        code: 'invalid_format',
+        format: 'datetime',
+        path: ['expires_at'],
+        message: 'Invalid ISO datetime'
+      }
+    ])
+    expect(JSON.parse(error.message)).toHaveLength(1)
   })
 })
 
