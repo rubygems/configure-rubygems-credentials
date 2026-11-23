@@ -11,7 +11,8 @@
     "lint": "oxlint --type-aware src",
     "package": "ncc build --source-map --license licenses.txt",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
+    "all": "npm run build && npm run typecheck && npm run format && npm run lint && npm run package && npm test",
+    "typecheck": "tsc -p tsconfig.test.json"
   },
   "repository": {
     "type": "git",
