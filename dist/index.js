@@ -49996,7 +49996,10 @@ const IdTokenSchema = object({
     name: schemas_string(),
     scopes: array(schemas_string()),
     gem: RubygemSchema.optional(),
-    expires_at: iso_datetime({ offset: true })
+    expires_at: union([
+        iso_datetime({ offset: true }),
+        iso_datetime({ offset: true, precision: -1 })
+    ])
 })
     .transform(({ rubygems_api_key, expires_at, ...rest }) => {
     return {
