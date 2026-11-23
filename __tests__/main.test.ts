@@ -188,6 +188,35 @@ describe('exchangeToken', () => {
       )
     )
   })
+
+  test('reports an invalid expires_at as a single datetime issue', async () => {
+    jest.mocked(core.getIDToken).mockResolvedValue('ID_TOKEN')
+
+    nock('https://rubygems.org')
+      .post('/api/v1/oidc/trusted_publisher/exchange_token', {
+        jwt: 'ID_TOKEN'
+      })
+      .reply(201, {
+        name: 'role name',
+        rubygems_api_key: 'API_KEY',
+        expires_at: 'tomorrow',
+        scopes: ['push_rubygem']
+      })
+
+    const error = await exchangeToken(
+      'rubygems.org',
+      'https://rubygems.org'
+    ).catch(e => e)
+    expect(JSON.parse(error.message)).toMatchObject([
+      {
+        code: 'invalid_format',
+        format: 'datetime',
+        path: ['expires_at'],
+        message: 'Invalid ISO datetime'
+      }
+    ])
+    expect(JSON.parse(error.message)).toHaveLength(1)
+  })
 })
 
 let exportedVariables: Record<string, string>

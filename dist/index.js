@@ -49991,15 +49991,25 @@ function iso_duration(params) {
 const RubygemSchema = object({
     name: schemas_string()
 });
+const DatetimeSchema = iso_datetime({ offset: true });
+const MinutePrecisionDatetimeSchema = iso_datetime({
+    offset: true,
+    precision: -1
+});
+const ExpiresAtSchema = schemas_string().check(ctx => {
+    if (MinutePrecisionDatetimeSchema.safeParse(ctx.value).success)
+        return;
+    const result = DatetimeSchema.safeParse(ctx.value);
+    if (!result.success)
+        for (const issue of result.error.issues)
+            ctx.issues.push({ ...issue, input: ctx.value });
+});
 const IdTokenSchema = object({
     rubygems_api_key: schemas_string(),
     name: schemas_string(),
     scopes: array(schemas_string()),
     gem: RubygemSchema.optional(),
-    expires_at: union([
-        iso_datetime({ offset: true }),
-        iso_datetime({ offset: true, precision: -1 })
-    ])
+    expires_at: ExpiresAtSchema
 })
     .transform(({ rubygems_api_key, expires_at, ...rest }) => {
     return {
