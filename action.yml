@@ -26,6 +26,12 @@ inputs:
     description: >-
       Whether to configure the credentials as a trusted publisher. Defaults to true if no other configuration is given.
     required: false
+  owner:
+    description: >-
+      The ID of the RubyGems.org account that owns the gem.
+      Only required when pushing a new gem via a pending trusted publisher.
+      Only supported with trusted publishing.
+    required: false
 runs:
   using: 'node24'
   main: 'dist/index.js'

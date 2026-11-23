@@ -24,6 +24,7 @@ export const IdTokenSchema = z
     name: z.string(),
     scopes: z.array(z.string()),
     gem: RubygemSchema.optional(),
+    owner: z.string().optional(),
     expires_at: ExpiresAtSchema
   })
   .transform(({rubygems_api_key, expires_at, ...rest}) => {

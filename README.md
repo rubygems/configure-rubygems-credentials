@@ -54,6 +54,17 @@ Configure a trusted publisher for your gem on RubyGems.org, then use:
 No additional inputs are required. The action will automatically use OIDC to authenticate
 with RubyGems.org as a trusted publisher.
 
+To push the first release of a new gem via a pending trusted publisher,
+also pass the ID of the RubyGems.org account that will own the gem with the `owner` input.
+The ID is shown on the account's Pending Trusted Publishers page.
+
+```yaml
+- name: Configure RubyGems Credentials
+  uses: rubygems/configure-rubygems-credentials@main
+  with:
+    owner: '12345'
+```
+
 ### OIDC API Key Role
 
 Alternatively, you can create an OIDC API Key Role on RubyGems.org and reference it
