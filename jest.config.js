@@ -4,7 +4,13 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
-    '^.+\\.ts$': ['ts-jest', {useESM: true}]
+    '^.+\\.ts$': [
+      '@swc/jest',
+      {
+        jsc: {parser: {syntax: 'typescript'}, target: 'es2024'},
+        module: {type: 'es6'}
+      }
+    ]
   },
   verbose: true,
   setupFiles: ['./jest.setup.js']
